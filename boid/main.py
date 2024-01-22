@@ -6,10 +6,10 @@ from numerics import ERK44
 
 
 minx, miny = 0, 0
-maxx, maxy = 150, 150
+maxx, maxy = 320, 180
 
 w, h = fig_size_from_bounds(11, minx, maxx, miny, maxy)
-dt = 0.2
+dt = 0.3
 
 rk = ERK44()
 domain = Domain(minx, miny, maxx, maxy)
@@ -23,7 +23,7 @@ obstacles = [
 ]
 for o in obstacles:
     domain.add_obstacle(o)
-boids = Boids(domain, 500, 5.0)
+boids = Boids(domain, 600, 10)
 
 fig, ax = plt.subplots(num='Boids', figsize=(w, h), facecolor='k')
 ax.set_xlim(minx, maxx)
@@ -39,9 +39,10 @@ fig.tight_layout()
 for o in domain.obstacles:
     o.plot(ax)
 scatter = ax.scatter(pos[0], pos[1], s=10, marker='o', color=colors)
+scale_units = 'width' if maxx-minx < maxy-miny else 'height'
 arrows =  ax.quiver(
     pos[0], pos[1], vel[0], vel[1], angles='xy',
-    scale_units='width', scale=100, color=colors
+    scale_units=scale_units, scale=150, color=colors
 )
 for _ in range(10_000):
     for _ in range(rk.nsub):
