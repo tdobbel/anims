@@ -1,7 +1,7 @@
 import argparse
 import numpy as np
 from game import Game
-from visualizer import visualize_plot
+from visualizer import visualize_plot, visualize_anim
 from rules import (
     underpopulation, overpopulation, reproduction
 )
@@ -26,7 +26,8 @@ def main() -> None:
     cols = np.random.randint(0, args.ncol, size=args.nseed)
     for row, col in zip(rows, cols):
         game.activate_cell(row, col)
-    visualize_plot(game, args.max_iter, show_grid=args.show_grid)
+    # visualize_plot(game, args.max_iter, show_grid=args.show_grid)
+    visualize_anim(game, args.max_iter, show_grid=args.show_grid)
 
 if __name__ == '__main__':
     main()

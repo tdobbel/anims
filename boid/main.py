@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
+from matplotlib import animation
 import numpy as np
 from slimutil.visualization import fig_size_from_bounds
 from boid import Domain, Boids, Obstacle
 from numerics import ERK44
 
-
 minx, miny = 0, 0
 maxx, maxy = 320, 180
+n_frames= 10_000
 
 w, h = fig_size_from_bounds(11, minx, maxx, miny, maxy)
 dt = 0.3
@@ -44,13 +45,14 @@ arrows =  ax.quiver(
     pos[0], pos[1], vel[0], vel[1], angles='xy',
     scale_units=scale_units, scale=150, color=colors
 )
-for _ in range(10_000):
+
+def animate(_):
     for _ in range(rk.nsub):
         rk.sub_time_step(boids, boids.compute_dx(dt))
     rk.end_time_step(boids)
     scatter.set_offsets(boids.get_positions())
     arrows.set_offsets(boids.get_positions())
     arrows.set_UVC(*boids.get_velocities().T)
-    plt.draw()
-    plt.pause(0.01)
+    return ax
+ani = animation.FuncAnimation(fig, animate, frames=n_frames, interval=1, blit=False)
 plt.show()
