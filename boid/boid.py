@@ -7,7 +7,7 @@ DEFAULT_WEIGHTS = {
     'alignment': 1.0,
     'wall': 0.8,
     'separation': 1.1,
-    'obstacle': 0.9
+    'obstacle': 1.0
 }
 
 def _distance_weight(dx: np.ndarray) -> np.ndarray:
