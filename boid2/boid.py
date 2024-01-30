@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import itertools
+from functools import cmp_to_key
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -11,6 +12,11 @@ WEIGHTS = {
     'obstacle': 1.0
 }
 
+
+def _compare(vec1: np.ndarray, vec2: np.ndarray) -> int:
+    if vec1[0] == vec2[0]:
+        return np.clip(vec1[1] - vec2[1], -1, 1)
+    return np.clip(vec1[0] - vec2[0], -1, 1)
 
 def normalize_vector(vec: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(vec)
@@ -129,27 +135,36 @@ class Flock:
     def velocities(self) -> np.ndarray:
         return np.array([b.vel for b in self.boids])
 
+    def _add_pair(self, bid1: int, bid2: int, dist: float) -> int:
+        if bid1 == bid2:
+            return 0
+        self.boids[bid1].add_neighbour(bid2, dist)
+        self.boids[bid2].add_neighbour(bid1, dist)
+        return 1
+
     def _find_neighbours(self) -> None:
-        rows, cols = self.domain.get_coordinates(self.positions)
+        boid_pos = self.positions
+        rows, cols = self.domain.get_coordinates(boid_pos)
+        pairs = np.unique(np.array([rows, cols]), axis=1).T
+        pairs = sorted(pairs, key=cmp_to_key(_compare))
         # reset neighbors
-        for boid in self.boids:
-            boid.reset_neighbors()
-        shifts = [(0,0), (0,1), (1,0), (1,1)]
+        _ = [ boid.reset_neighbors() for boid in self.boids ]
         iterables = [range(self.domain.ny), range(self.domain.nx)]
         for row,col in itertools.product(*iterables):
-            boid_ids = np.where((cols == col) & (rows == row))[0]
-            for shift_r, shift_c in shifts:
-                other_ids = np.where(
-                    (cols == col + shift_c) & (rows == row + shift_r)
-                )[0]
-                for i,j in itertools.product(boid_ids, other_ids):
-                    if i == j:
-                        continue
-                    dist = np.linalg.norm(self.boids[i].pos - self.boids[j].pos)
-                    if dist > self.domain.radius:
-                        continue
-                    self.boids[i].add_neighbour(j, dist)
-                    self.boids[j].add_neighbour(i, dist)
+            select = (cols >= col) & (cols <= col+1) & (rows >= row) & (rows <= row+1)
+            other_ids = np.where(select)[0]
+            select[select] = (cols[select] == col) & (rows[select] == row)
+            boid_ids = np.where(select)[0]
+            for bid in boid_ids:
+                dist = np.linalg.norm(boid_pos[other_ids] - boid_pos[[bid]], axis=1)
+                within_radius = dist < self.domain.radius
+                if not np.any(within_radius):
+                    continue
+                oids = other_ids[within_radius]
+                add_iter = (
+                    self._add_pair(bid,oid,d) for oid,d in zip(oids,dist[within_radius])
+                )
+                np.fromiter(add_iter, count=len(oids), dtype=np.int)
 
     def compute_dx(self, dt: float) -> np.ndarray:
         pos = self.positions
