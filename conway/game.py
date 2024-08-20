@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from typing import Union, Callable
 import itertools
 import numpy as np
+from numpy.typing import NDArray
 
-Index = Union[int, np.ndarray]
-Rule = Callable[[np.ndarray, np.ndarray, np.ndarray], tuple[np.ndarray, np.ndarray]]
+Index = Union[int, NDArray]
+Rule = Callable[[NDArray, NDArray, NDArray], tuple[NDArray, NDArray]]
 
 class Game:
     """Class to represent the game of life."""
@@ -31,7 +32,7 @@ class Game:
         """Convert row and column indices to pixel indices."""
         return row * self.n_col + col
 
-    def get_grid_values(self) -> np.ndarray:
+    def get_grid_values(self) -> NDArray:
         """Return the current state of the grid."""
         return self.grid
 
@@ -43,7 +44,7 @@ class Game:
         """Activate a cell."""
         self.grid[row,col] = 1
 
-    def count_active_neighbours(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def count_active_neighbours(self) -> tuple[NDArray, NDArray, NDArray]:
         """
         Count the number of active neighbours around active cells and inactive cells
         adjacent to active cells.
